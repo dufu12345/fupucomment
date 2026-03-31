@@ -56,8 +56,8 @@ def is_logged_in(page: Page) -> bool:
       - 已登录：右上角出现用户头像/昵称，"游客"消失
     """
     try:
-        page.goto(HUPU_HOME, wait_until="domcontentloaded", timeout=20_000)
-        page.wait_for_timeout(2000)
+        page.goto(HUPU_HOME, wait_until="networkidle", timeout=30_000)
+        page.wait_for_timeout(3000)
 
         # 用 JS 读取整个 body 文字，判断是否包含"游客"
         body_text = page.evaluate("() => document.body.innerText")
@@ -89,34 +89,42 @@ def login(page: Page, username: str, password: str) -> bool:
     logger.info(f"正在登录账号: {username}")
 
     try:
-        page.goto(HUPU_HOME, wait_until="domcontentloaded", timeout=20_000)
-        page.wait_for_timeout(1500)
+        page.goto(HUPU_HOME, wait_until="networkidle", timeout=30_000)
+        page.wait_for_timeout(3000)
 
         # 点击右上角"登录"按钮，触发 Modal 弹出
-        # 用 JS 找到第一个包含"登录"文字的可点击元素并点击，绕过可见性限制
-        clicked = page.evaluate("""
-            () => {
-                const candidates = Array.from(
-                    document.querySelectorAll('a, button, span, div')
-                );
-                for (const el of candidates) {
-                    if (el.textContent.trim() === '登录' && el.offsetParent !== null) {
-                        el.click();
-                        return el.tagName + '#' + (el.id || '') + '.' + el.className;
+        # 多次重试，headless 模式下页面渲染可能较慢
+        clicked = False
+        for attempt in range(3):
+            result = page.evaluate("""
+                () => {
+                    const candidates = Array.from(
+                        document.querySelectorAll('a, button, span, div')
+                    );
+                    for (const el of candidates) {
+                        const text = el.textContent.trim();
+                        if ((text === '登录' || text === '登 录') && el.offsetParent !== null) {
+                            el.click();
+                            return el.tagName + '#' + (el.id || '') + '.' + el.className;
+                        }
                     }
+                    return null;
                 }
-                return null;
-            }
-        """)
-        if clicked:
-            logger.debug(f"已点击登录按钮: {clicked}")
-        else:
+            """)
+            if result:
+                logger.debug(f"已点击登录按钮: {result}")
+                clicked = True
+                break
+            logger.debug(f"第 {attempt+1} 次未找到登录按钮，等待重试...")
+            page.wait_for_timeout(2000)
+
+        if not clicked:
             logger.warning("JS 方式未找到登录按钮，尝试直接定位输入框")
         logger.debug("等待 Modal 弹出")
 
-        # 等待 Modal 中的用户名输入框出现
+        # 等待 Modal 中的用户名输入框出现（headless 下给更多时间）
         username_input = page.locator(_LOGIN_SELECTORS["username_input"]).first
-        username_input.wait_for(state="visible", timeout=8_000)
+        username_input.wait_for(state="visible", timeout=15_000)
 
         # 填写用户名
         username_input.click()
