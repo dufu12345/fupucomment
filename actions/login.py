@@ -57,6 +57,15 @@ def is_logged_in(page: Page) -> bool:
     """
     try:
         page.goto(HUPU_HOME, wait_until="domcontentloaded", timeout=30_000)
+    except PWTimeoutError:
+        logger.warning("首页加载超时，重试一次...")
+        try:
+            page.goto(HUPU_HOME, wait_until="commit", timeout=30_000)
+        except PWTimeoutError:
+            logger.error("首页加载两次均超时")
+            return False
+
+    try:
         page.wait_for_timeout(5000)
 
         # 用 JS 读取整个 body 文字，判断是否包含"游客"
@@ -66,12 +75,11 @@ def is_logged_in(page: Page) -> bool:
             logger.info("检测到游客状态，未登录")
             return False
 
-        # 没有"游客"说明已登录（或页面异常，保守认为已登录避免死循环）
         logger.info("未检测到游客标识，判断为已登录")
         return True
 
-    except PWTimeoutError:
-        logger.warning("检测登录状态时页面超时")
+    except Exception as e:
+        logger.warning(f"检测登录状态异常: {e}")
         return False
 
 
@@ -89,8 +97,13 @@ def login(page: Page, username: str, password: str) -> bool:
     logger.info(f"正在登录账号: {username}")
 
     try:
-        page.goto(HUPU_HOME, wait_until="domcontentloaded", timeout=30_000)
-        page.wait_for_timeout(5000)
+        # 如果当前不在虎扑首页，先跳转过去
+        if "bbs.hupu.us" not in page.url:
+            page.goto(HUPU_HOME, wait_until="domcontentloaded", timeout=30_000)
+            page.wait_for_timeout(5000)
+        else:
+            # is_logged_in() 已经打开了首页，不需要重复跳转
+            page.wait_for_timeout(2000)
 
         # 点击右上角"登录"按钮，触发 Modal 弹出
         # 多次重试，headless 模式下页面渲染可能较慢
