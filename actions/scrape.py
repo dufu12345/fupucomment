@@ -56,16 +56,41 @@ def get_threads_from_board(page: Page, board_url: str) -> list[ThreadInfo]:
     threads: list[ThreadInfo] = []
 
     try:
-        page.goto(board_url, wait_until="domcontentloaded", timeout=20_000)
-        human_delay(1.5, 3.0)
+        page.goto(board_url, wait_until="domcontentloaded", timeout=30_000)
+        # headless 模式下页面渲染更慢，等久一些
+        page.wait_for_timeout(5000)
+
+        # 打印当前 URL 和页面标题，确认跳转正确
+        logger.info(f"当前 URL: {page.url}，页面标题: {page.title()}")
 
         # 读取当前登录用户名（用于判断是否已回复）
         current_user = _get_current_username(page)
 
+        # 尝试多种选择器找帖子列表
         rows = page.locator(_THREAD_ROW_SELECTOR).all()
+
+        # 如果主选择器找不到，尝试更宽泛的备选
         if not rows:
-            logger.warning(f"未找到帖子列表，可能选择器需要更新: {_THREAD_ROW_SELECTOR}")
-            _debug_page_snapshot(page)
+            fallback_selectors = [
+                "li",
+                "ul li",
+                "article",
+                "div[data-topic-id]",
+                "[data-open-topic]",
+            ]
+            for sel in fallback_selectors:
+                rows = page.locator(sel).all()
+                if rows:
+                    logger.info(f"主选择器未匹配，备选 '{sel}' 找到 {len(rows)} 个元素")
+                    break
+
+        if not rows:
+            logger.warning(f"未找到帖子列表，可能选择器需要更新")
+            # 打印页面结构帮助调试
+            body_text = page.evaluate("() => document.body.innerText.substring(0, 500)")
+            logger.warning(f"页面文本（前500字）: {body_text}")
+            html_snippet = page.evaluate("() => document.body.innerHTML.substring(0, 1000)")
+            logger.warning(f"页面 HTML（前1000字）: {html_snippet}")
             return []
 
         logger.info(f"找到 {len(rows)} 个帖子条目")

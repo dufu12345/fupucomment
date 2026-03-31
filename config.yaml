@@ -8,7 +8,7 @@ browser:
   user_data_dir: "./data/browser_profile"   # 持久化登录态的目录
 
 targets:
-  - board_url: "https://bbs.hupu.us/bxj"   # 篮球综合版块
+  - board_url: "https://bbs.hupu.us/"      # 首页（最稳定，兼容 headless）
     keywords: []        # 留空=不过滤，填关键词如 ["湖人", "詹姆斯"] 只回复包含这些词的帖子
     max_threads: 3      # 该版块最多回几帖
 
