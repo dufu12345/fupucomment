@@ -236,6 +236,33 @@ Open DevTools (`F12`) in the browser window and update the selectors in:
 
 ---
 
+## How It Works
+
+This project is **not a traditional web scraper**. Instead of sending raw HTTP requests, it uses Playwright to control a **real Chromium browser**, simulating every step a human would take:
+
+1. **Launch browser** — Opens a real Chrome window with anti-detection scripts (overrides `navigator.webdriver`, custom User-Agent) so Hupu's servers see a normal user
+2. **Auto-login** — Navigates to Hupu homepage → checks login status → clicks "Login" button → fills username/password in the modal → submits (exactly like manual operation)
+3. **Scrape threads** — Uses CSS selectors to locate thread elements on the page, extracting title, URL, reply count, etc.
+4. **AI-generated replies** — Sends thread title and body to an AI (Groq/Gemini/etc.) to generate a natural, context-aware reply
+5. **Submit reply** — Locates the reply input box (`contenteditable` `<div>`), injects content via JavaScript, clicks "Submit"
+6. **Random delays** — Uses Gaussian-distributed random delays to mimic human browsing patterns and avoid bot detection
+
+### Why Not a Traditional Scraper (requests)?
+
+| Aspect | Traditional Scraper (requests) | This Project (Playwright) |
+|---|---|---|
+| Speed | Very fast (milliseconds) | Slower (loads real pages) |
+| Resource usage | Very low (a few MB) | Higher (browser process, hundreds of MB) |
+| Anti-Cloudflare | Almost impossible to bypass | Real browser, passes through |
+| Login difficulty | Must reverse-engineer JS encryption + CAPTCHA | Just types and clicks buttons |
+| Reply difficulty | Must reverse-engineer API endpoints + signatures | Operates directly on the page |
+| Maintenance cost | Breaks when API changes | Works as long as page layout is similar |
+| Detection risk | High (obvious bot fingerprint) | Low (indistinguishable from a real user) |
+
+Hupu uses **Cloudflare Turnstile anti-bot verification** + **dynamic JS rendering** + **complex login flow**. A traditional scraper would actually be harder to develop and easier to block. Playwright is heavier but simpler to build, more stable, and much harder to detect.
+
+---
+
 ## Notes
 
 - Please comply with Hupu's Terms of Service; do not use for spam or marketing
