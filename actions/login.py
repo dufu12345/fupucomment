@@ -56,8 +56,8 @@ def is_logged_in(page: Page) -> bool:
       - 已登录：右上角出现用户头像/昵称，"游客"消失
     """
     try:
-        page.goto(HUPU_HOME, wait_until="networkidle", timeout=30_000)
-        page.wait_for_timeout(3000)
+        page.goto(HUPU_HOME, wait_until="domcontentloaded", timeout=30_000)
+        page.wait_for_timeout(5000)
 
         # 用 JS 读取整个 body 文字，判断是否包含"游客"
         body_text = page.evaluate("() => document.body.innerText")
@@ -89,8 +89,8 @@ def login(page: Page, username: str, password: str) -> bool:
     logger.info(f"正在登录账号: {username}")
 
     try:
-        page.goto(HUPU_HOME, wait_until="networkidle", timeout=30_000)
-        page.wait_for_timeout(3000)
+        page.goto(HUPU_HOME, wait_until="domcontentloaded", timeout=30_000)
+        page.wait_for_timeout(5000)
 
         # 点击右上角"登录"按钮，触发 Modal 弹出
         # 多次重试，headless 模式下页面渲染可能较慢
