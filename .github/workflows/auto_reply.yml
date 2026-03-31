@@ -1,0 +1,46 @@
+name: 虎扑自动回帖
+
+on:
+  schedule:
+    # 每天 UTC 14:00 触发（北京时间 22:00）
+    - cron: '0 14 * * *'
+  workflow_dispatch: # 允许手动触发（调试用）
+
+jobs:
+  reply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 缓存 pip 依赖
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('requirements.txt') }}
+
+      - name: 安装依赖
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: 随机延迟（0~60分钟，模拟不固定时间）
+        run: |
+          DELAY=$((RANDOM % 3600))
+          echo "随机等待 ${DELAY} 秒（约 $((DELAY / 60)) 分钟）..."
+          sleep $DELAY
+
+      - name: 运行回帖脚本
+        env:
+          HUPU_USERNAME: ${{ secrets.HUPU_USERNAME }}
+          HUPU_PASSWORD: ${{ secrets.HUPU_PASSWORD }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python main.py

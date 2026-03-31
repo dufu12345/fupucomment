@@ -1,0 +1,9 @@
+.env
+data/browser_profile/
+data/*.log
+data/debug_output.txt
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+assets/

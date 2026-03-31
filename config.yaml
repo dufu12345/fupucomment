@@ -1,0 +1,32 @@
+account:
+  username: ""          # 填入虎扑用户名/手机号
+  password: ""          # 填入密码
+
+browser:
+  headless: false       # false=显示浏览器窗口，调试用；true=后台运行
+  slow_mo: 50           # 每个操作之间的毫秒延迟，模拟人工操作
+  user_data_dir: "./data/browser_profile"   # 持久化登录态的目录
+
+targets:
+  - board_url: "https://bbs.hupu.us/bxj"   # 篮球综合版块
+    keywords: []        # 留空=不过滤，填关键词如 ["湖人", "詹姆斯"] 只回复包含这些词的帖子
+    max_threads: 3      # 该版块最多回几帖
+
+  # 可继续添加更多版块
+  # - board_url: "https://bbs.hupu.us/lol"
+  #   keywords: ["S赛"]
+  #   max_threads: 2
+
+reply:
+  min_delay_seconds: 45     # 相邻两次回帖最小间隔（秒）
+  max_delay_seconds: 120    # 相邻两次回帖最大间隔（秒）
+  max_per_run: 1            # 单次运行最多回帖总数
+  skip_if_already_replied: true   # 如果自己已经回复过该帖，跳过
+
+content:
+  mode: "ai"            # random=随机语料库, template=模板, ai=调用AI（推荐，避免灌水检测）
+  replies_file: "./data/replies.txt"   # random 模式的语料库文件
+
+logging:
+  level: "INFO"         # DEBUG / INFO / WARNING / ERROR
+  file: "./data/hupu_bot.log"
