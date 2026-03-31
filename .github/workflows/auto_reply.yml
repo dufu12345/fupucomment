@@ -32,9 +32,9 @@ jobs:
           playwright install chromium
           playwright install-deps chromium
 
-      - name: 随机延迟（0~60分钟，模拟不固定时间）
+      - name: 随机延迟（0~10分钟，模拟不固定时间）
         run: |
-          DELAY=$((RANDOM % 3600))
+          DELAY=$((RANDOM % 600))
           echo "随机等待 ${DELAY} 秒（约 $((DELAY / 60)) 分钟）..."
           sleep $DELAY
 
