@@ -1,6 +1,6 @@
 [English](README_EN.md) | 中文
 
-# 虎扑自动回帖脚本
+# 虎扑自动回帖脚本（仅用于学习）
 
 Python + Playwright 实现的虎扑 BBS 自动回帖工具，支持 AI 生成回复内容、GUI 一键运行、Windows 定时任务自动执行。
 
