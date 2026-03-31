@@ -1,6 +1,6 @@
 English | [中文](README.md)
 
-# Hupu Auto-Reply Bot(Study Only)
+# Hupu Auto-Reply Bot (Study Only)
 
 An automated reply bot for [Hupu BBS](https://bbs.hupu.us/) built with Python + Playwright. Features AI-powered reply generation, a one-click GUI, and Windows scheduled task support.
 
