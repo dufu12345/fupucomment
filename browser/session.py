@@ -2,9 +2,15 @@
 浏览器会话管理：启动 Playwright、持久化 Cookie、反检测配置
 """
 import os
+import sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright, BrowserContext, Playwright
 from loguru import logger
+
+if getattr(sys, "frozen", False):
+    _MS_PW = Path(os.environ.get("LOCALAPPDATA", "")) / "ms-playwright"
+    if _MS_PW.exists():
+        os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", str(_MS_PW))
 
 
 # 模拟真实 Windows Chrome 的 User-Agent

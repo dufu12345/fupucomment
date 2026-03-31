@@ -7,3 +7,6 @@ __pycache__/
 .venv/
 *.egg-info/
 assets/
+dist/
+build/
+*.spec
