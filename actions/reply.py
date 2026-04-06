@@ -17,11 +17,11 @@ from utils.delay import human_delay, read_delay
 # 回复输入框（contenteditable div，页面加载后默认可见）
 _REPLY_INPUT = "#topicReplyBody"
 
-# 提交按钮（多个候选，按优先级尝试）
+# 回复表单和提交按钮
+_REPLY_FORM = "#topicReplyForm"
 _SUBMIT_BTN_SELECTORS = [
-    "#topicReplyEditor button.btn.btn-primary",
-    "#topicReplyEditor button[type='submit']",
-    "#topicReplyDiv button.btn.btn-primary",
+    "#topicReplyForm button.btn.btn-primary",
+    "#topicReplyForm button[type='submit']",
     "button.btn.btn-primary",
     "button:has-text('提交')",
     "button.btn-primary",
@@ -94,14 +94,14 @@ def post_reply(page: Page, thread: ThreadInfo, content: str) -> bool:
             reply_box.type(content, delay=_typing_delay_ms())
             human_delay(0.5, 1.0)
 
-        # 点击提交按钮（遍历候选选择器）
+        # 点击提交按钮
         submitted = _click_submit(page)
         if not submitted:
             logger.error("所有提交按钮选择器均失败，回帖中止")
             return False
 
-        # 等待提交响应
-        page.wait_for_timeout(3000)
+        # 等待提交响应（表单提交可能有网络请求）
+        page.wait_for_timeout(5000)
 
         # 判断是否成功（回复框被清空 = 成功）
         if _check_success(page, reply_box):
@@ -120,7 +120,30 @@ def post_reply(page: Page, thread: ThreadInfo, content: str) -> bool:
 
 
 def _click_submit(page: Page) -> bool:
-    """遍历候选选择器找到并点击提交按钮"""
+    """提交回复：优先用 JS 提交表单，其次点击按钮"""
+    # 方式 1：直接用 JS 提交 form（最可靠，因为按钮是 type=submit）
+    try:
+        submitted = page.evaluate("""
+            () => {
+                const form = document.querySelector('#topicReplyForm');
+                if (form) {
+                    // 先尝试点击 submit 按钮触发表单验证
+                    const btn = form.querySelector('button[type="submit"], button.btn-primary');
+                    if (btn) { btn.click(); return 'btn'; }
+                    // 兜底：直接 submit
+                    form.submit();
+                    return 'form';
+                }
+                return null;
+            }
+        """)
+        if submitted:
+            logger.debug(f"JS 提交成功（方式: {submitted}）")
+            return True
+    except Exception as e:
+        logger.debug(f"JS 表单提交失败: {e}")
+
+    # 方式 2：Playwright 直接 click 按钮
     for selector in _SUBMIT_BTN_SELECTORS:
         try:
             btn = page.locator(selector).last
@@ -129,12 +152,12 @@ def _click_submit(page: Page) -> bool:
                 btn.wait_for(state="visible", timeout=3_000)
                 human_delay(0.3, 0.8)
                 btn.click()
-                logger.debug(f"已点击提交按钮: {selector}")
+                logger.debug(f"Playwright 点击提交按钮: {selector}")
                 return True
         except Exception:
             continue
 
-    # 最后兜底：用 JS 找"提交"文字按钮并点击
+    # 方式 3：JS 兜底找所有"提交"按钮
     try:
         clicked = page.evaluate("""
             () => {
