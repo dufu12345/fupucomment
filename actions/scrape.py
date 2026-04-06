@@ -9,42 +9,26 @@ from strategy.selector import ThreadInfo
 from utils.delay import human_delay
 
 # ──────────────────── 版块列表页选择器 ────────────────────
-# 每行帖子的容器
-# bbs.hupu.us 新版页面结构：帖子列表在 ul > li 里
-_THREAD_ROW_SELECTOR = (
-    "li.thread, "
-    "section[aria-label='thread list'] li, "
-    "ul.for-list li"
-)
+# 2026-04 新版页面结构:
+#   <section class="feed" aria-label="Thread list">
+#     <ul> <li class="thread"> ... </li> </ul>
+#   </section>
+_THREAD_ROW_SELECTOR = "li.thread"
 
-# 帖子标题按钮（DevTools 确认：<button class="u-link" data-open-topic="ID">标题</button>）
+# 帖子标题按钮: <button class="u-link" data-open-topic="116">标题</button>
 _TITLE_BTN_SELECTOR = "button.u-link[data-open-topic]"
 
-# 帖子回复数（在 .t-meta 区域里）
-_REPLY_COUNT_SELECTOR = (
-    ".t-reply, "
-    ".reply-count, "
-    "[class*='reply']"
-)
+# 帖子元数据区（回复数、浏览数等）
+_STATS_SELECTOR = ".t-stats span, .t-meta span, .t-right span"
 
-# 帖子作者
-_AUTHOR_SELECTOR = (
-    ".t-author, "
-    ".t-name, "
-    "[class*='author'] a, "
-    "a[href*='/user-']"
-)
+# 帖子作者（头像旁的用户名链接）
+_AUTHOR_SELECTOR = ".t-avatar, .t-meta a, a[href*='/user/']"
 
-# 置顶标记
-_PINNED_SELECTOR = ".icon-top, [class*='isTop'], span:has-text('置顶'), .t-tag:has-text('置顶')"
+# 置顶/精华标记
+_PINNED_SELECTOR = ".t-tag:has-text('置顶'), .badge:has-text('置顶'), .pin-icon"
 
-# 自己用户名（从右上角用户信息区域读取）
-_CURRENT_USER_SELECTOR = (
-    ".user-info .name, "
-    "[class*='userName'], "
-    "[class*='userInfo'] span, "
-    ".avatar + span"
-)
+# 当前登录用户名
+_CURRENT_USER_SELECTOR = ".topbar a[href*='/user/'], .user-name, .avatar-wrap + span"
 
 
 def get_threads_from_board(page: Page, board_url: str) -> list[ThreadInfo]:
@@ -57,65 +41,40 @@ def get_threads_from_board(page: Page, board_url: str) -> list[ThreadInfo]:
 
     try:
         page.goto(board_url, wait_until="domcontentloaded", timeout=30_000)
-        # headless 模式下页面渲染更慢，等久一些
         page.wait_for_timeout(5000)
 
-        # 打印当前 URL 和页面标题，确认跳转正确
         logger.info(f"当前 URL: {page.url}，页面标题: {page.title()}")
 
-        # 读取当前登录用户名（用于判断是否已回复）
         current_user = _get_current_username(page)
 
-        # 尝试多种选择器找帖子列表
+        # 保存当前版块路径，用于拼接帖子 URL（如 /bxj）
+        board_path = page.url.split("?")[0].rstrip("/")
+
         rows = page.locator(_THREAD_ROW_SELECTOR).all()
 
-        # 如果主选择器找不到，尝试更宽泛的备选
         if not rows:
-            fallback_selectors = [
-                "li",
-                "ul li",
-                "article",
-                "div[data-topic-id]",
-                "[data-open-topic]",
-            ]
-            for sel in fallback_selectors:
-                rows = page.locator(sel).all()
-                if rows:
-                    logger.info(f"主选择器未匹配，备选 '{sel}' 找到 {len(rows)} 个元素")
-                    break
-
-        if not rows:
-            logger.warning(f"未找到帖子列表，可能选择器需要更新")
-            # 打印页面结构帮助调试
+            logger.warning("未找到帖子列表（li.thread），可能选择器需要更新")
             body_text = page.evaluate("() => document.body.innerText.substring(0, 500)")
             logger.warning(f"页面文本（前500字）: {body_text}")
-            html_snippet = page.evaluate("() => document.body.innerHTML.substring(0, 1000)")
-            logger.warning(f"页面 HTML（前1000字）: {html_snippet}")
             return []
 
         logger.info(f"找到 {len(rows)} 个帖子条目")
 
-        # 调试：打印前两行的 innerHTML，帮助确认选择器
-        for i, row in enumerate(rows[:2]):
-            try:
-                html = row.inner_html()
-                logger.debug(f"[帖子行 {i}] HTML 片段: {html[:800]}")
-            except Exception:
-                pass
-
         for row in rows:
             try:
-                thread = _parse_thread_row(row, current_user)
+                thread = _parse_thread_row(row, current_user, board_path)
                 if thread:
                     threads.append(thread)
             except Exception as e:
                 logger.debug(f"解析帖子行失败，跳过: {e}")
                 continue
 
-        # 如果一个都没解析出来，打印更多信息
         if not threads and rows:
-            logger.warning("所有帖子行均解析失败，请查看上方 DEBUG 日志确认选择器")
-            logger.warning(f"当前标题选择器: {_TITLE_LINK_SELECTOR}")
+            logger.warning("所有帖子行均解析失败，尝试打印第一行 HTML 辅助调试")
+            try:
+                logger.warning(f"第一行 HTML: {rows[0].inner_html()[:500]}")
+            except Exception:
+                pass
 
     except PWTimeoutError:
         logger.error(f"访问版块超时: {board_url}")
@@ -126,9 +85,8 @@ def get_threads_from_board(page: Page, board_url: str) -> list[ThreadInfo]:
     return threads
 
 
-def _parse_thread_row(row, current_user: str) -> ThreadInfo | None:
+def _parse_thread_row(row, current_user: str, board_path: str) -> ThreadInfo | None:
     """从单行帖子 DOM 元素中提取信息"""
-    # 获取标题按钮（<button class="u-link" data-open-topic="ID">）
     title_el = row.locator(_TITLE_BTN_SELECTOR).first
     if title_el.count() == 0:
         return None
@@ -139,28 +97,32 @@ def _parse_thread_row(row, current_user: str) -> ThreadInfo | None:
     if not title or not topic_id:
         return None
 
-    # 根据 topic_id 构造帖子 URL（虎扑帖子格式：/?t={id}）
-    href = f"https://bbs.hupu.us/?t={topic_id}"
+    # URL 格式: https://bbs.hupu.us/bxj?t=116
+    href = f"{board_path}?t={topic_id}"
 
-    # 回复数
+    # 回复数：尝试从 stats 区域提取第一个纯数字
     reply_count = 0
-    reply_el = row.locator(_REPLY_COUNT_SELECTOR).first
-    if reply_el.count() > 0:
+    stats_els = row.locator(_STATS_SELECTOR).all()
+    for el in stats_els:
         try:
-            reply_count = int(reply_el.inner_text().strip().replace(",", ""))
-        except ValueError:
-            pass
+            text = el.inner_text().strip().replace(",", "")
+            if text.isdigit():
+                reply_count = int(text)
+                break
+        except Exception:
+            continue
 
-    # 作者
+    # 作者：从 data-user 属性或链接文本提取
     author = ""
-    author_el = row.locator(_AUTHOR_SELECTOR).first
-    if author_el.count() > 0:
-        author = author_el.inner_text().strip()
+    avatar_el = row.locator("[data-user]").first
+    if avatar_el.count() > 0:
+        author = avatar_el.get_attribute("data-user") or ""
+    if not author:
+        author_el = row.locator(_AUTHOR_SELECTOR).first
+        if author_el.count() > 0:
+            author = author_el.inner_text().strip()
 
-    # 是否置顶
     is_pinned = row.locator(_PINNED_SELECTOR).count() > 0
-
-    # 是否自己已回复（列表页通常不显示，先设 False，进入帖子后再检测）
     already_replied = (author == current_user) if current_user else False
 
     return ThreadInfo(
@@ -213,10 +175,13 @@ def fetch_thread_body(page: Page, thread_url: str) -> str:
         # 虎扑帖子正文选择器（楼主第一楼内容区域）
         body_selectors = [
             ".topic-content",
+            ".topic.thread .post-content",
+            ".topic.page .content",
             ".post-content",
             "[class*='topicContent']",
             "[class*='topic-body']",
             ".content-wrap",
+            ".topic.thread",
         ]
         for selector in body_selectors:
             el = page.locator(selector).first
