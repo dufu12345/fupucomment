@@ -32,6 +32,11 @@ def should_reply(thread: ThreadInfo, board_config: dict) -> bool:
         logger.debug(f"跳过置顶帖: {thread.title}")
         return False
 
+    _SKIP_KEYWORDS = ["新人必看", "版规", "公告", "必读", "置顶", "规则"]
+    if any(kw in thread.title for kw in _SKIP_KEYWORDS):
+        logger.debug(f"跳过公告帖: {thread.title}")
+        return False
+
     if skip_if_replied and thread.already_replied:
         logger.debug(f"跳过已回复帖: {thread.title}")
         return False

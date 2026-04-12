@@ -10,7 +10,7 @@ browser:
 targets:
   - board_url: "https://bbs.hupu.us/bxj"   # 篮球综合版块
     keywords: []        # 留空=不过滤，填关键词如 ["湖人", "詹姆斯"] 只回复包含这些词的帖子
-    max_threads: 3      # 该版块最多回几帖
+    max_threads: 3      # 该版块最多筛选几个候选帖子（实际只回复 max_per_run 个）
 
   # 可继续添加更多版块
   # - board_url: "https://bbs.hupu.us/lol"
