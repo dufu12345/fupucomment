@@ -3,7 +3,7 @@ chcp 65001 >nul
 echo ===== 虎扑自动回帖 - 打包为 exe =====
 echo.
 
-cd /d D:\jhu_blockchain_reseasrch\fupucomment
+cd /d "%~dp0"
 
 echo [1/3] 安装 PyInstaller...
 pip install pyinstaller -q

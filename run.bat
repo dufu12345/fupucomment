@@ -1,4 +1,4 @@
 @echo off
-cd /d D:\jhu_blockchain_reseasrch\fupucomment
+cd /d "%~dp0"
 call conda activate hupu
 python main.py
