@@ -1,4 +1,4 @@
-[English](README_EN.md) | 中文
+[English](README.md) | 中文
 
 # 虎扑自动回帖脚本（仅用于学习）
 

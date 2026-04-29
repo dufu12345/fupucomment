@@ -1,4 +1,4 @@
-English | [中文](README.md)
+English | [中文](README_CN.md)
 
 # Hupu Auto-Reply Bot (Study Only)
 
