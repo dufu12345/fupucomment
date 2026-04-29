@@ -70,7 +70,7 @@ class HupuApp:
         self.status_label.pack(side=tk.LEFT)
 
         self.log_area = scrolledtext.ScrolledText(
-            self.root, font=("Consolas", 10), bg="#1e1e2e", fg="#f0f0f0",
+            self.root, font=("Consolas", 9), bg="#0f3460", fg="#e0e0e0",
             insertbackground="white", wrap=tk.WORD, state=tk.DISABLED,
             relief="flat", borderwidth=0,
         )
