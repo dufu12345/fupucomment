@@ -13,7 +13,6 @@ pyinstaller --noconfirm --onedir --windowed ^
     --name "虎扑自动回帖" ^
     --add-data "config.yaml;." ^
     --add-data "data\replies.txt;data" ^
-    --add-data ".env;." ^
     --hidden-import=playwright ^
     --hidden-import=playwright.sync_api ^
     --hidden-import=yaml ^
