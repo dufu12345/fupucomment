@@ -13,6 +13,7 @@ fupucomment/
 ├── main.py                 # 主入口（命令行运行）
 ├── launcher.py             # GUI 启动器（打包为 exe 后双击运行）
 ├── config.yaml             # 配置文件：版块 URL、回帖数、延迟、模式等
+├── .env.example            # 凭据模板（复制为 .env 后填值）
 ├── .env                    # 敏感信息：虎扑账号密码、AI API Key（不上传 Git）
 ├── requirements.txt        # Python 依赖列表
 │
@@ -101,7 +102,13 @@ playwright install chromium
 
 ### 3. 填写配置
 
-创建 `.env` 文件（敏感信息，不会上传 Git）：
+把 `.env.example` 复制为 `.env`，然后填入你的凭据（`.env` 文件被 git ignore，不会上传）：
+
+```powershell
+copy .env.example .env
+```
+
+然后编辑 `.env`：
 
 ```
 HUPU_USERNAME=你的用户名
@@ -185,18 +192,17 @@ schtasks /change /tn "HupuAutoReply" /st 08:00  # 改时间
 
 ## 打包为 exe
 
-```powershell
-# 方式一：运行打包脚本
-build.bat
+直接运行打包脚本即可（它会处理所有步骤）：
 
-# 方式二：手动执行
-pip install pyinstaller
-pyinstaller --noconfirm --onedir --windowed --name "HupuBot" --collect-all playwright launcher.py
+```powershell
+build.bat
 ```
 
-打包后输出在 `dist/HupuBot/`，双击 `HupuBot.exe` 即可运行。
+输出在 `dist/HupuBot/`，双击 `HupuBot.exe` 即可运行。
 
-前提：本机需已执行过 `playwright install chromium`，exe 会自动查找系统已安装的浏览器。
+**前提**：本机需已执行过 `playwright install chromium`，打包后的 exe 会在运行时查找系统已安装的浏览器。
+
+**发布给别人前**：先清理 `dist/HupuBot/.env`（删掉你的真实账号密码），并删除 `dist/HupuBot/data/browser_profile/` 和所有 `*.log` 文件。打包脚本结束时也会打印这个提醒。
 
 ---
 

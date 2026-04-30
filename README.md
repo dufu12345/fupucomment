@@ -13,6 +13,7 @@ fupucomment/
 ├── main.py                 # CLI entry point
 ├── launcher.py             # GUI launcher (packaged as exe)
 ├── config.yaml             # Configuration: board URLs, reply limits, delays, modes
+├── .env.example            # Template for credentials (copy to .env and fill in)
 ├── .env                    # Secrets: Hupu credentials, AI API keys (not tracked by Git)
 ├── requirements.txt        # Python dependencies
 │
@@ -101,7 +102,13 @@ playwright install chromium
 
 ### 3. Configure
 
-Create a `.env` file (secrets, not tracked by Git):
+Copy `.env.example` to `.env` and fill in your credentials (the `.env` file is git-ignored so your secrets stay local):
+
+```powershell
+copy .env.example .env
+```
+
+Then edit `.env`:
 
 ```
 HUPU_USERNAME=your_username
@@ -185,18 +192,17 @@ schtasks /change /tn "HupuAutoReply" /st 08:00  # Change time
 
 ## Packaging as exe
 
-```powershell
-# Option 1: Run the build script
-build.bat
+Just run the build script — it handles everything:
 
-# Option 2: Manual
-pip install pyinstaller
-pyinstaller --noconfirm --onedir --windowed --name "HupuBot" --collect-all playwright launcher.py
+```powershell
+build.bat
 ```
 
 Output is in `dist/HupuBot/`. Double-click `HupuBot.exe` to launch.
 
-Prerequisite: `playwright install chromium` must have been run on the machine. The exe automatically locates the system-installed browser.
+**Prerequisite**: `playwright install chromium` must have been run on the machine. The packaged exe locates the system-installed browser at runtime.
+
+**Before publishing the build to others**: clean `dist/HupuBot/.env` (remove your real credentials) and delete `dist/HupuBot/data/browser_profile/` and any `*.log` files first. The build script prints a reminder at the end.
 
 ---
 
