@@ -40,10 +40,7 @@ fupucomment/
 │
 ├── run.bat                 # Windows 一键运行脚本（conda activate + python main.py）
 ├── setup_task.bat          # 创建 Windows 定时任务（每天 22:00 自动执行）
-├── build.bat               # PyInstaller 打包脚本（生成 exe）
-│
-└── .github/workflows/
-    └── auto_reply.yml      # GitHub Actions 工作流（被 Cloudflare 拦截，已弃用）
+└── build.bat               # PyInstaller 打包脚本（生成 exe）
 ```
 
 ---
@@ -183,10 +180,6 @@ schtasks /run /tn "HupuAutoReply"        # 手动运行
 schtasks /delete /tn "HupuAutoReply" /f  # 删除任务
 schtasks /change /tn "HupuAutoReply" /st 08:00  # 改时间
 ```
-
-### GitHub Actions（已弃用）
-
-虎扑部署了 Cloudflare Turnstile 反机器人验证，headless 浏览器 + 海外 IP 会被拦截，因此 GitHub Actions 方案不可用。
 
 ---
 

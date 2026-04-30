@@ -40,10 +40,7 @@ fupucomment/
 │
 ├── run.bat                 # One-click Windows run script
 ├── setup_task.bat          # Create Windows scheduled task (daily at 22:00)
-├── build.bat               # PyInstaller packaging script
-│
-└── .github/workflows/
-    └── auto_reply.yml      # GitHub Actions workflow (deprecated, blocked by Cloudflare)
+└── build.bat               # PyInstaller packaging script
 ```
 
 ---
@@ -183,10 +180,6 @@ schtasks /run /tn "HupuAutoReply"        # Run manually
 schtasks /delete /tn "HupuAutoReply" /f  # Delete task
 schtasks /change /tn "HupuAutoReply" /st 08:00  # Change time
 ```
-
-### GitHub Actions (Deprecated)
-
-Hupu uses Cloudflare Turnstile anti-bot verification, which blocks headless browsers and foreign IPs. GitHub Actions is therefore not viable for this project.
 
 ---
 
