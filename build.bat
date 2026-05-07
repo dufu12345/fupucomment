@@ -12,14 +12,27 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [1/4] 安装 PyInstaller...
+echo [1/5] 安装项目依赖与 PyInstaller...
+python -m pip install -r requirements.txt -q
 python -m pip install pyinstaller -q
 
-echo [2/4] 清理旧的构建产物...
+echo [2/5] 校验当前 Python 是否已安装 Playwright...
+python -c "import playwright.sync_api; print('playwright OK')"
+if errorlevel 1 (
+    echo.
+    echo 打包用的 Python 里找不到 playwright。日志里的「Hidden import playwright.sync_api not found」也是这个原因。
+    echo 请在本机已能运行「python main.py」的同一环境里执行：先 conda activate 你的环境，再运行本脚本；或对该 Python 执行：
+    echo   python -m pip install -r requirements.txt
+    echo   playwright install chromium
+    pause
+    exit /b 1
+)
+
+echo [3/5] 清理旧的构建产物...
 if exist "dist\HupuBot" rd /s /q "dist\HupuBot"
 if exist "build\HupuBot" rd /s /q "build\HupuBot"
 
-echo [3/4] 开始打包...
+echo [4/5] 开始打包...
 python -m PyInstaller --noconfirm --onedir --windowed ^
     --name "HupuBot" ^
     --add-data "config.yaml;." ^
@@ -54,7 +67,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [4/4] 复制运行所需文件到输出目录...
+echo [5/5] 复制运行所需文件到输出目录...
 xcopy /Y /I "config.yaml" "dist\HupuBot\"
 xcopy /Y /I ".env" "dist\HupuBot\"
 xcopy /Y /I /E "data" "dist\HupuBot\data\"
