@@ -5,15 +5,22 @@ echo.
 
 cd /d "%~dp0"
 
+python --version >nul 2>&1
+if errorlevel 1 (
+    echo 未找到 python。请从「Anaconda Prompt」或已安装 Python 的终端进入本目录后再运行 build.bat。
+    pause
+    exit /b 1
+)
+
 echo [1/4] 安装 PyInstaller...
-pip install pyinstaller -q
+python -m pip install pyinstaller -q
 
 echo [2/4] 清理旧的构建产物...
 if exist "dist\HupuBot" rd /s /q "dist\HupuBot"
 if exist "build\HupuBot" rd /s /q "build\HupuBot"
 
 echo [3/4] 开始打包...
-pyinstaller --noconfirm --onedir --windowed ^
+python -m PyInstaller --noconfirm --onedir --windowed ^
     --name "HupuBot" ^
     --add-data "config.yaml;." ^
     --add-data "data\replies.txt;data" ^
@@ -40,6 +47,13 @@ pyinstaller --noconfirm --onedir --windowed ^
     --collect-all playwright ^
     launcher.py
 
+if errorlevel 1 (
+    echo.
+    echo 打包失败：PyInstaller 执行出错。请确认本目录下能运行 python launcher.py，并已执行 pip install -r requirements.txt
+    pause
+    exit /b 1
+)
+
 echo [4/4] 复制运行所需文件到输出目录...
 xcopy /Y /I "config.yaml" "dist\HupuBot\"
 xcopy /Y /I ".env" "dist\HupuBot\"
@@ -55,7 +69,6 @@ echo ===== 打包完成！=====
 echo 输出目录: dist\HupuBot\
 echo 双击 "dist\HupuBot\HupuBot.exe" 即可运行
 echo.
-echo 提示：发布到 GitHub Releases 前请先清理 dist\HupuBot\.env 中的真实凭据，
-echo       并删除 dist\HupuBot\data\browser_profile\ 和 *.log 文件！
+echo 提示：发布到 GitHub Releases 前请清理 dist\HupuBot\.env 里的真实凭据，并删除 dist\HupuBot\data\browser_profile 目录及其中所有 .log 日志文件。
 echo.
 pause
