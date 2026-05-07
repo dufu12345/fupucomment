@@ -53,6 +53,7 @@ class HupuApp:
         self._running = False
         self._env_entries: dict[str, tk.Entry] = {}
         self._build_ui()
+        self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _build_ui(self):
         title = tk.Label(
@@ -62,7 +63,7 @@ class HupuApp:
         title.pack(pady=(18, 6))
 
         subtitle = tk.Label(
-            self.root, text="填写下方账号与 API，保存到 .env 后点击「开始运行」",
+            self.root, text="配置会保存到程序目录的 .env，下次打开自动填入；运行或关窗口时会自动保存",
             font=("Microsoft YaHei UI", 10), fg="#aaaaaa", bg="#1a1a2e",
         )
         subtitle.pack(pady=(0, 8))
@@ -80,7 +81,7 @@ class HupuApp:
 
         hint = tk.Label(
             settings,
-            text="至少填写虎扑账号密码；AI 回复需至少填一个 API Key。勿将 .env 分享给他人或上传网盘。",
+            text="填写后一般无需每次再输：关闭窗口或点「开始运行」都会写入 .env。勿将 .env 分享给他人。",
             font=("Microsoft YaHei UI", 9),
             fg="#888899",
             bg="#16213e",
@@ -176,7 +177,12 @@ class HupuApp:
             self._env_entries[env_key].delete(0, tk.END)
             self._env_entries[env_key].insert(0, val)
 
-    def _on_save_env(self):
+    def _persist_env_to_disk(
+        self,
+        *,
+        show_success_dialog: bool = False,
+        log_message: str | None = None,
+    ) -> bool:
         path = self._env_file_path()
         existing = dotenv_values(path) if path.exists() else {}
         lines: list[str] = [
@@ -200,10 +206,22 @@ class HupuApp:
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-            messagebox.showinfo("已保存", f"已写入：\n{path}")
-            self._log(f"已保存 .env → {path}")
+            if show_success_dialog:
+                messagebox.showinfo("已保存", f"已写入：\n{path}")
+            if log_message:
+                self._log(log_message)
+            return True
         except OSError as e:
             messagebox.showerror("保存失败", str(e))
+            return False
+
+    def _on_save_env(self):
+        p = self._env_file_path()
+        self._persist_env_to_disk(show_success_dialog=True, log_message=f"已保存 .env → {p}")
+
+    def _on_close(self):
+        self._persist_env_to_disk(show_success_dialog=False, log_message=None)
+        self.root.destroy()
 
     def _on_open_config_dir(self):
         folder = resource_path(".")
@@ -235,6 +253,9 @@ class HupuApp:
     def _start_task(self, dry_run: bool):
         if self._running:
             messagebox.showwarning("提示", "脚本正在运行中，请等待完成")
+            return
+
+        if not self._persist_env_to_disk(show_success_dialog=False, log_message=None):
             return
 
         self._running = True
