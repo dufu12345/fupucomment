@@ -3,11 +3,34 @@
 打包为 exe 后双击即可运行，无需命令行。
 """
 import os
+import subprocess
 import sys
 import threading
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
 from pathlib import Path
+
+from dotenv import dotenv_values
+
+_ENV_FIELD_ROWS = (
+    ("虎扑账号", "HUPU_USERNAME", False),
+    ("虎扑密码", "HUPU_PASSWORD", True),
+    ("Groq API Key（可选）", "GROQ_API_KEY", False),
+    ("Gemini API Key（可选）", "GEMINI_API_KEY", False),
+    ("DeepSeek API Key（可选）", "DEEPSEEK_API_KEY", False),
+    ("OpenAI API Key（可选）", "OPENAI_API_KEY", False),
+)
+_ENV_KEYS_GUI = {row[1] for row in _ENV_FIELD_ROWS}
+
+
+def _format_env_line_value(val: str) -> str:
+    """写入 .env 时对含空格、#、引号的值做必要转义"""
+    if not val:
+        return ""
+    if any(c in val for c in " \t\n\r#\"") or val.startswith("'"):
+        esc = val.replace("\\", "\\\\").replace('"', '\\"')
+        return f'"{esc}"'
+    return val
 
 
 def resource_path(relative: str) -> str:
@@ -23,10 +46,12 @@ class HupuApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("虎扑自动回帖")
-        self.root.geometry("700x520")
+        self.root.geometry("700x720")
+        self.root.minsize(640, 600)
         self.root.resizable(True, True)
         self.root.configure(bg="#1a1a2e")
         self._running = False
+        self._env_entries: dict[str, tk.Entry] = {}
         self._build_ui()
 
     def _build_ui(self):
@@ -37,10 +62,73 @@ class HupuApp:
         title.pack(pady=(18, 6))
 
         subtitle = tk.Label(
-            self.root, text="点击「开始运行」即可自动回帖",
+            self.root, text="填写下方账号与 API，保存到 .env 后点击「开始运行」",
             font=("Microsoft YaHei UI", 10), fg="#aaaaaa", bg="#1a1a2e",
         )
-        subtitle.pack(pady=(0, 12))
+        subtitle.pack(pady=(0, 8))
+
+        settings = tk.LabelFrame(
+            self.root,
+            text=" 账户与 API（写入程序目录下的 .env，与 config_loader 一致） ",
+            font=("Microsoft YaHei UI", 10),
+            fg="#e0e0e0",
+            bg="#16213e",
+            bd=1,
+            labelanchor="n",
+        )
+        settings.pack(fill=tk.X, padx=20, pady=(0, 8))
+
+        hint = tk.Label(
+            settings,
+            text="至少填写虎扑账号密码；AI 回复需至少填一个 API Key。勿将 .env 分享给他人或上传网盘。",
+            font=("Microsoft YaHei UI", 9),
+            fg="#888899",
+            bg="#16213e",
+            wraplength=620,
+            justify=tk.LEFT,
+        )
+        hint.pack(anchor="w", padx=10, pady=(6, 4))
+
+        for label_text, env_key, is_pw in _ENV_FIELD_ROWS:
+            row = tk.Frame(settings, bg="#16213e")
+            row.pack(fill=tk.X, padx=10, pady=2)
+            lbl = tk.Label(
+                row, text=label_text, font=("Microsoft YaHei UI", 9),
+                fg="#cccccc", bg="#16213e", width=22, anchor="e",
+            )
+            lbl.pack(side=tk.LEFT, padx=(0, 8))
+            ent = tk.Entry(row, font=("Microsoft YaHei UI", 9), width=52, bg="#0f3460", fg="#e8e8e8", insertbackground="white")
+            if is_pw:
+                ent.configure(show="*")
+            ent.pack(side=tk.LEFT, fill=tk.X, expand=True)
+            self._env_entries[env_key] = ent
+
+        settings_btn = tk.Frame(settings, bg="#16213e")
+        settings_btn.pack(fill=tk.X, padx=10, pady=(10, 10))
+        tk.Button(
+            settings_btn,
+            text="保存到 .env",
+            font=("Microsoft YaHei UI", 10),
+            bg="#e94560",
+            fg="white",
+            activebackground="#c81e45",
+            relief="flat",
+            cursor="hand2",
+            command=self._on_save_env,
+        ).pack(side=tk.LEFT, padx=(0, 10))
+        tk.Button(
+            settings_btn,
+            text="打开配置目录",
+            font=("Microsoft YaHei UI", 10),
+            bg="#0f3460",
+            fg="#00d2ff",
+            activebackground="#16213e",
+            relief="flat",
+            cursor="hand2",
+            command=self._on_open_config_dir,
+        ).pack(side=tk.LEFT)
+
+        self._load_env_into_fields()
 
         btn_frame = tk.Frame(self.root, bg="#1a1a2e")
         btn_frame.pack(pady=6)
@@ -75,6 +163,59 @@ class HupuApp:
             relief="flat", borderwidth=0,
         )
         self.log_area.pack(fill=tk.BOTH, expand=True, padx=20, pady=(4, 18))
+
+    def _env_file_path(self) -> Path:
+        return Path(resource_path(".env"))
+
+    def _load_env_into_fields(self):
+        path = self._env_file_path()
+        data = dotenv_values(path) if path.exists() else {}
+        for _label, env_key, _is_pw in _ENV_FIELD_ROWS:
+            raw = data.get(env_key)
+            val = (raw or "").strip() if isinstance(raw, str) else (str(raw) if raw else "")
+            self._env_entries[env_key].delete(0, tk.END)
+            self._env_entries[env_key].insert(0, val)
+
+    def _on_save_env(self):
+        path = self._env_file_path()
+        existing = dotenv_values(path) if path.exists() else {}
+        lines: list[str] = [
+            "# 由虎扑自动回帖 GUI 写入；也可手动编辑。勿上传或分享本文件。",
+            "",
+        ]
+        for _label, env_key, _is_pw in _ENV_FIELD_ROWS:
+            val = self._env_entries[env_key].get().strip()
+            lines.append(f"{env_key}={_format_env_line_value(val)}")
+        extras = [
+            (k, v)
+            for k, v in existing.items()
+            if k and k not in _ENV_KEYS_GUI
+        ]
+        if extras:
+            lines.append("")
+            lines.append("# 其他变量（保留自原 .env）")
+            for k, v in sorted(extras, key=lambda x: x[0]):
+                vv = v if v is not None else ""
+                lines.append(f"{k}={_format_env_line_value(str(vv))}")
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+            messagebox.showinfo("已保存", f"已写入：\n{path}")
+            self._log(f"已保存 .env → {path}")
+        except OSError as e:
+            messagebox.showerror("保存失败", str(e))
+
+    def _on_open_config_dir(self):
+        folder = resource_path(".")
+        try:
+            if sys.platform == "win32":
+                os.startfile(folder)  # type: ignore[attr-defined]
+            elif sys.platform == "darwin":
+                subprocess.run(["open", folder], check=False)
+            else:
+                subprocess.run(["xdg-open", folder], check=False)
+        except OSError as e:
+            messagebox.showerror("无法打开目录", str(e))
 
     def _log(self, text: str):
         self.log_area.configure(state=tk.NORMAL)
