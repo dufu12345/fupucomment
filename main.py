@@ -1,5 +1,5 @@
 """
-虎扑自动回帖脚本 - 主入口
+hupu自动回帖脚本 - 主入口
 用法:
     python main.py                   # 运行一次
     python main.py --config my.yaml  # 指定配置文件
@@ -23,7 +23,7 @@ from utils.delay import post_interval
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="虎扑自动回帖脚本")
+    parser = argparse.ArgumentParser(description="hupu自动回帖脚本")
     parser.add_argument("--config", default="config.yaml", help="配置文件路径")
     parser.add_argument("--dry-run", action="store_true", help="演练模式，不真正提交回帖")
     parser.add_argument("--debug-selectors", action="store_true", help="打印页面信息帮助调试")

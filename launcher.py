@@ -1,5 +1,5 @@
 """
-虎扑自动回帖 - 一键启动器（GUI 版）
+hupu自动回帖 - 一键启动器（GUI 版）
 打包为 exe 后双击即可运行，无需命令行。
 """
 import os
@@ -13,8 +13,8 @@ from pathlib import Path
 from dotenv import dotenv_values
 
 _ENV_FIELD_ROWS = (
-    ("虎扑账号", "HUPU_USERNAME", False),
-    ("虎扑密码", "HUPU_PASSWORD", True),
+    ("hupu账号", "HUPU_USERNAME", False),
+    ("hupu密码", "HUPU_PASSWORD", True),
     ("Groq API Key（可选）", "GROQ_API_KEY", False),
     ("Gemini API Key（可选）", "GEMINI_API_KEY", False),
     ("DeepSeek API Key（可选）", "DEEPSEEK_API_KEY", False),
@@ -45,7 +45,7 @@ def resource_path(relative: str) -> str:
 class HupuApp:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("虎扑自动回帖")
+        self.root.title("hupu自动回帖")
         self.root.geometry("700x720")
         self.root.minsize(640, 600)
         self.root.resizable(True, True)
@@ -57,7 +57,7 @@ class HupuApp:
 
     def _build_ui(self):
         title = tk.Label(
-            self.root, text="虎扑自动回帖脚本", font=("Microsoft YaHei UI", 18, "bold"),
+            self.root, text="hupu自动回帖脚本", font=("Microsoft YaHei UI", 18, "bold"),
             fg="#e94560", bg="#1a1a2e",
         )
         title.pack(pady=(18, 6))
@@ -186,7 +186,7 @@ class HupuApp:
         path = self._env_file_path()
         existing = dotenv_values(path) if path.exists() else {}
         lines: list[str] = [
-            "# 由虎扑自动回帖 GUI 写入；也可手动编辑。勿上传或分享本文件。",
+            "# 由hupu自动回帖 GUI 写入；也可手动编辑。勿上传或分享本文件。",
             "",
         ]
         for _label, env_key, _is_pw in _ENV_FIELD_ROWS:

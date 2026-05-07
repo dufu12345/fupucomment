@@ -36,7 +36,7 @@ def generate_reply(thread: ThreadInfo, config: dict) -> str:
     return _ensure_min_length(reply)
 
 
-_MIN_REPLY_LENGTH = 10  # 虎扑要求回帖至少 10 个字
+_MIN_REPLY_LENGTH = 10  # hupu要求回帖至少 10 个字
 
 
 def _ensure_min_length(reply: str) -> str:
@@ -112,7 +112,7 @@ def _build_prompt(thread: ThreadInfo) -> str:
     if thread.body:
         context += f"\n\n帖子内容（前300字）：\n{thread.body}"
 
-    return f"""你是一个虎扑篮球论坛的普通用户，正在看一个帖子。
+    return f"""你是一个hupu篮球论坛的普通用户，正在看一个帖子。
 
 {context}
 

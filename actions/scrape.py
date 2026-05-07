@@ -1,6 +1,6 @@
 """
 帖子抓取模块：从版块列表页获取帖子信息
-注意：选择器基于虎扑 bbs.hupu.us 页面结构，若页面改版需要更新。
+注意：选择器基于hupu bbs.hupu.us 页面结构，若页面改版需要更新。
 """
 from loguru import logger
 from playwright.sync_api import Page, TimeoutError as PWTimeoutError
@@ -172,7 +172,7 @@ def fetch_thread_body(page: Page, thread_url: str) -> str:
         page.goto(thread_url, wait_until="domcontentloaded", timeout=15_000)
         human_delay(1.0, 2.0)
 
-        # 虎扑帖子正文选择器（楼主第一楼内容区域）
+        # hupu帖子正文选择器（楼主第一楼内容区域）
         body_selectors = [
             ".topic-content",
             ".topic.thread .post-content",

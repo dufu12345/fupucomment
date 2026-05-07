@@ -1,7 +1,7 @@
 """
 登录模块：检测登录状态、执行账号密码登录、处理异常情况
 
-虎扑登录方式：首页点击"登录"按钮后弹出 Modal，
+hupu登录方式：首页点击"登录"按钮后弹出 Modal，
 Modal 内表单结构（来自 DevTools 确认）：
   <form id="loginForm">
     <input name="login" autocomplete="username">        ← 用户名/邮箱
@@ -97,7 +97,7 @@ def login(page: Page, username: str, password: str) -> bool:
     logger.info(f"正在登录账号: {username}")
 
     try:
-        # 如果当前不在虎扑首页，先跳转过去
+        # 如果当前不在hupu首页，先跳转过去
         if "bbs.hupu.us" not in page.url:
             page.goto(HUPU_HOME, wait_until="domcontentloaded", timeout=30_000)
             page.wait_for_timeout(5000)

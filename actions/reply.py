@@ -1,7 +1,7 @@
 """
 回帖核心逻辑：进入帖子页面、定位回复框、输入内容、提交
 
-虎扑帖子页回复区结构（DevTools 确认）：
+hupu帖子页回复区结构（DevTools 确认）：
   div#topicReplyEditor
     div#topicReplyDiv
       div#topicReplyBody.editor-input.editor-editable  ← contenteditable，直接可见

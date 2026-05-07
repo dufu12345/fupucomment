@@ -1,8 +1,8 @@
 [English](README.md) | 中文
 
-# 虎扑自动回帖脚本（仅用于学习）
+# hupu自动回帖脚本（仅用于学习）
 
-Python + Playwright 实现的虎扑 BBS 自动回帖工具，支持 AI 生成回复内容、GUI 一键运行、Windows 定时任务自动执行。
+Python + Playwright 实现的hupu BBS 自动回帖工具，支持 AI 生成回复内容、GUI 一键运行、Windows 定时任务自动执行。
 
 ---
 
@@ -26,7 +26,7 @@ fupucomment/
 ├── launcher.py             # GUI 启动器（打包为 exe 后双击运行）
 ├── config.yaml             # 配置文件：版块 URL、回帖数、延迟、模式等
 ├── .env.example            # 凭据模板（复制为 .env 后填值）
-├── .env                    # 敏感信息：虎扑账号密码、AI API Key（不上传 Git）
+├── .env                    # 敏感信息：hupu账号密码、AI API Key（不上传 Git）
 ├── requirements.txt        # Python 依赖列表
 │
 ├── actions/                # 【动作层】浏览器上的具体操作
@@ -70,7 +70,7 @@ fupucomment/
 browser/session.py               ← 启动 Playwright 浏览器（反检测）
     │
     ▼
-actions/login.py                 ← 自动登录虎扑
+actions/login.py                 ← 自动登录hupu
     │
     ▼
 actions/scrape.py                ← 抓取帖子列表 + 正文
@@ -222,7 +222,7 @@ build.bat
 
 ## 选择器调试
 
-虎扑页面更新后，CSS 选择器可能会失效。运行调试模式查找正确选择器：
+hupu页面更新后，CSS 选择器可能会失效。运行调试模式查找正确选择器：
 
 ```powershell
 python main.py --debug-selectors
@@ -253,8 +253,8 @@ python main.py --debug-selectors
 
 本项目 **不是传统爬虫**，不直接发 HTTP 请求，而是用 Playwright 控制一个 **真实的 Chromium 浏览器**，模拟人类的每一步操作：
 
-1. **启动浏览器** — 打开一个真实的 Chrome 窗口，注入反检测脚本（修改 `navigator.webdriver`、自定义 User-Agent），让虎扑服务器认为是正常用户
-2. **自动登录** — 打开虎扑首页 → 检测是否已登录 → 点击"登录"按钮 → 在弹窗中填入账号密码 → 提交（和你手动操作完全一样）
+1. **启动浏览器** — 打开一个真实的 Chrome 窗口，注入反检测脚本（修改 `navigator.webdriver`、自定义 User-Agent），让hupu服务器认为是正常用户
+2. **自动登录** — 打开hupu首页 → 检测是否已登录 → 点击"登录"按钮 → 在弹窗中填入账号密码 → 提交（和你手动操作完全一样）
 3. **抓取帖子** — 通过 CSS 选择器定位页面上的帖子元素，提取标题、URL、回复数等信息
 4. **AI 生成回复** — 把帖子标题和正文发给 AI（Groq/Gemini 等），生成一条上下文相关的自然回复
 5. **提交回帖** — 定位回复输入框（`contenteditable` 的 `<div>`），用 JavaScript 注入回复内容，点击"发表"按钮
@@ -272,14 +272,14 @@ python main.py --debug-selectors
 | 维护成本 | 接口一改就废 | 页面布局没大改就行 |
 | 被检测风险 | 高（特征明显） | 低（和真人一样） |
 
-虎扑部署了 **Cloudflare Turnstile 反机器人验证** + **动态 JS 渲染** + **复杂登录流程**，传统爬虫的开发成本反而更高，还容易被拦截。Playwright 虽然更重，但开发简单、稳定、不容易被检测。
+hupu部署了 **Cloudflare Turnstile 反机器人验证** + **动态 JS 渲染** + **复杂登录流程**，传统爬虫的开发成本反而更高，还容易被拦截。Playwright 虽然更重，但开发简单、稳定、不容易被检测。
 
 ---
 
 ## 注意事项
 
-- 请遵守虎扑用户协议，合理使用，勿用于刷分/营销
+- 请遵守hupu用户协议，合理使用，勿用于刷分/营销
 - 建议 `min_delay_seconds` 不低于 30 秒
 - 首次运行建议 `headless: false` 以便手动处理验证码
 - `.env` 文件不要提交到 Git
-- 虎扑回帖内容要求至少 10 个中文字
+- hupu回帖内容要求至少 10 个中文字

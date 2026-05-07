@@ -1,5 +1,5 @@
 account:
-  username: ""          # 填入虎扑用户名/手机号
+  username: ""          # 填入hupu用户名/手机号
   password: ""          # 填入密码
 
 browser:

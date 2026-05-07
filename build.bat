@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-echo ===== 虎扑自动回帖 - 打包为 exe =====
+echo ===== hupu自动回帖 - 打包为 exe =====
 echo.
 
 cd /d "%~dp0"

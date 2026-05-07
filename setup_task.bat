@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-echo ===== 创建 Windows 定时任务：每天 22:00 自动运行虎扑回帖脚本 =====
+echo ===== 创建 Windows 定时任务：每天 22:00 自动运行hupu回帖脚本 =====
 echo.
 
 set "SCRIPT_DIR=%~dp0"
