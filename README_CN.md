@@ -6,6 +6,18 @@ Python + Playwright 实现的虎扑 BBS 自动回帖工具，支持 AI 生成回
 
 ---
 
+## 给非开发者：下载即用
+
+**已打包的 Windows 程序**放在 [GitHub Releases](https://github.com/dufu12345/fupucomment/releases)。网页上绿色的 **Code** 只有源码，没有 exe；需要可执行文件请打开 Releases。
+
+1. **下载**：在 Releases 里下载最新的 zip（由维护者用本地 `build.bat` 打包后上传）。
+2. **解压**：解压到任意文件夹（路径尽量不用中文，可减少个别环境下的兼容问题）。
+3. **使用**：按压缩包内说明配置 `.env`（通常是把 `.env.example` 复制为 `.env` 并填写），双击 `HupuBot.exe`。
+
+若 Releases 里暂时没有附件，说明尚未发布构建版本；可从本仓库拉源码，本地运行 `build.bat` 生成 `dist\HupuBot\`（见下文「打包为 exe」）。
+
+---
+
 ## 项目结构
 
 ```
@@ -203,6 +215,8 @@ build.bat
 **前提**：本机需已执行过 `playwright install chromium`，打包后的 exe 会在运行时查找系统已安装的浏览器。
 
 **发布给别人前**：先清理 `dist/HupuBot/.env`（删掉你的真实账号密码），并删除 `dist/HupuBot/data/browser_profile/` 和所有 `*.log` 文件。打包脚本结束时也会打印这个提醒。
+
+**对外分发**：将清理后的整个 `dist/HupuBot` 文件夹打成 zip，在 [Releases](https://github.com/dufu12345/fupucomment/releases) 新建版本并上传该 zip 作为附件（与本文开头的「给非开发者」说明一致）。
 
 ---
 

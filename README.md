@@ -6,6 +6,18 @@ An automated reply bot for [Hupu BBS](https://bbs.hupu.us/) built with Python + 
 
 ---
 
+## For non-developers: download and run
+
+**Prebuilt Windows bundles** are published on [GitHub Releases](https://github.com/dufu12345/fupucomment/releases). The green **Code** button on the repo page only contains source code, not an exe. Use the Releases page to download the zip the maintainer built with `build.bat` locally.
+
+1. **Download** the latest release zip.
+2. **Extract** it to a folder (plain ASCII paths reduce edge-case issues on some setups).
+3. **Run** follow the bundle instructions for `.env` (usually copy `.env.example` to `.env` and fill in), then double-click `HupuBot.exe`.
+
+If there is no release asset yet, no public build has been uploaded; clone the repo and run `build.bat` to produce `dist\HupuBot\` (see **Packaging as exe** below).
+
+---
+
 ## Project Structure
 
 ```
@@ -203,6 +215,8 @@ Output is in `dist/HupuBot/`. Double-click `HupuBot.exe` to launch.
 **Prerequisite**: `playwright install chromium` must have been run on the machine. The packaged exe locates the system-installed browser at runtime.
 
 **Before publishing the build to others**: clean `dist/HupuBot/.env` (remove your real credentials) and delete `dist/HupuBot/data/browser_profile/` and any `*.log` files first. The build script prints a reminder at the end.
+
+**Public distribution**: zip the cleaned `dist/HupuBot` folder, create a [Release](https://github.com/dufu12345/fupucomment/releases), and attach the zip (same workflow as **For non-developers** at the top).
 
 ---
 
