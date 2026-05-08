@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import threading
+import webbrowser
 import tkinter as tk
 from tkinter import scrolledtext, messagebox
 from pathlib import Path
@@ -21,6 +22,14 @@ _ENV_FIELD_ROWS = (
     ("OpenAI API Key（可选）", "OPENAI_API_KEY"),
 )
 _ENV_KEYS_GUI = {row[1] for row in _ENV_FIELD_ROWS}
+
+# 与 .env.example 一致：点按钮在默认浏览器打开，无需用户自行搜索
+_API_CONSOLE_LINKS = (
+    ("Groq", "https://console.groq.com/keys"),
+    ("Gemini", "https://aistudio.google.com/apikey"),
+    ("DeepSeek", "https://platform.deepseek.com"),
+    ("OpenAI", "https://platform.openai.com/api-keys"),
+)
 
 
 def _format_env_line_value(val: str) -> str:
@@ -46,8 +55,8 @@ class HupuApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("hupu自动回帖")
-        self.root.geometry("700x720")
-        self.root.minsize(640, 600)
+        self.root.geometry("700x800")
+        self.root.minsize(640, 680)
         self.root.resizable(True, True)
         self.root.configure(bg="#1a1a2e")
         self._running = False
@@ -90,6 +99,33 @@ class HupuApp:
             justify=tk.LEFT,
         )
         hint.pack(anchor="w", padx=10, pady=(6, 4))
+
+        api_help = tk.Label(
+            settings,
+            text="AI 回复：至少填上面四个 Key 之一即可（脚本按 Groq → Gemini → DeepSeek → OpenAI 优先级）。"
+            "没 Key 时点下面按钮，会在浏览器打开对应官网创建/复制 Key。",
+            font=("Microsoft YaHei UI", 9),
+            fg="#99aacc",
+            bg="#16213e",
+            wraplength=620,
+            justify=tk.LEFT,
+        )
+        api_help.pack(anchor="w", padx=10, pady=(2, 6))
+        api_btn_row = tk.Frame(settings, bg="#16213e")
+        api_btn_row.pack(fill=tk.X, padx=10, pady=(0, 8))
+        for label, url in _API_CONSOLE_LINKS:
+            tk.Button(
+                api_btn_row,
+                text=f"{label} · 申请 Key",
+                font=("Microsoft YaHei UI", 8),
+                bg="#0f3460",
+                fg="#6ec8ff",
+                activebackground="#1a3a66",
+                activeforeground="#ffffff",
+                relief="flat",
+                cursor="hand2",
+                command=lambda u=url: self._open_url(u),
+            ).pack(side=tk.LEFT, padx=(0, 6), pady=2)
 
         for label_text, env_key in _ENV_FIELD_ROWS:
             row = tk.Frame(settings, bg="#16213e")
@@ -190,6 +226,13 @@ class HupuApp:
 
     def _env_file_path(self) -> Path:
         return Path(resource_path(".env"))
+
+    @staticmethod
+    def _open_url(url: str):
+        try:
+            webbrowser.open(url, new=1)
+        except OSError as e:
+            messagebox.showerror("无法打开浏览器", f"{e}\n请手动复制链接：\n{url}")
 
     def _sync_entry_mask(self):
         show = "" if self._reveal_secrets.get() else "*"
