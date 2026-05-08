@@ -13,12 +13,12 @@ from pathlib import Path
 from dotenv import dotenv_values
 
 _ENV_FIELD_ROWS = (
-    ("hupu账号", "HUPU_USERNAME", False),
-    ("hupu密码", "HUPU_PASSWORD", True),
-    ("Groq API Key（可选）", "GROQ_API_KEY", False),
-    ("Gemini API Key（可选）", "GEMINI_API_KEY", False),
-    ("DeepSeek API Key（可选）", "DEEPSEEK_API_KEY", False),
-    ("OpenAI API Key（可选）", "OPENAI_API_KEY", False),
+    ("hupu账号", "HUPU_USERNAME"),
+    ("hupu密码", "HUPU_PASSWORD"),
+    ("Groq API Key（可选）", "GROQ_API_KEY"),
+    ("Gemini API Key（可选）", "GEMINI_API_KEY"),
+    ("DeepSeek API Key（可选）", "DEEPSEEK_API_KEY"),
+    ("OpenAI API Key（可选）", "OPENAI_API_KEY"),
 )
 _ENV_KEYS_GUI = {row[1] for row in _ENV_FIELD_ROWS}
 
@@ -81,7 +81,7 @@ class HupuApp:
 
         hint = tk.Label(
             settings,
-            text="填写后一般无需每次再输：关闭窗口或点「开始运行」都会写入 .env。勿将 .env 分享给他人。",
+            text="以下输入均以 * 显示；内容仍会正常写入 .env。关闭窗口或点「开始运行」会自动保存。勿将 .env 分享给他人。",
             font=("Microsoft YaHei UI", 9),
             fg="#888899",
             bg="#16213e",
@@ -90,7 +90,7 @@ class HupuApp:
         )
         hint.pack(anchor="w", padx=10, pady=(6, 4))
 
-        for label_text, env_key, is_pw in _ENV_FIELD_ROWS:
+        for label_text, env_key in _ENV_FIELD_ROWS:
             row = tk.Frame(settings, bg="#16213e")
             row.pack(fill=tk.X, padx=10, pady=2)
             lbl = tk.Label(
@@ -98,9 +98,15 @@ class HupuApp:
                 fg="#cccccc", bg="#16213e", width=22, anchor="e",
             )
             lbl.pack(side=tk.LEFT, padx=(0, 8))
-            ent = tk.Entry(row, font=("Microsoft YaHei UI", 9), width=52, bg="#0f3460", fg="#e8e8e8", insertbackground="white")
-            if is_pw:
-                ent.configure(show="*")
+            ent = tk.Entry(
+                row,
+                font=("Microsoft YaHei UI", 9),
+                width=52,
+                bg="#0f3460",
+                fg="#e8e8e8",
+                insertbackground="white",
+                show="*",
+            )
             ent.pack(side=tk.LEFT, fill=tk.X, expand=True)
             self._env_entries[env_key] = ent
 
@@ -171,7 +177,7 @@ class HupuApp:
     def _load_env_into_fields(self):
         path = self._env_file_path()
         data = dotenv_values(path) if path.exists() else {}
-        for _label, env_key, _is_pw in _ENV_FIELD_ROWS:
+        for _label, env_key in _ENV_FIELD_ROWS:
             raw = data.get(env_key)
             val = (raw or "").strip() if isinstance(raw, str) else (str(raw) if raw else "")
             self._env_entries[env_key].delete(0, tk.END)
@@ -189,7 +195,7 @@ class HupuApp:
             "# 由hupu自动回帖 GUI 写入；也可手动编辑。勿上传或分享本文件。",
             "",
         ]
-        for _label, env_key, _is_pw in _ENV_FIELD_ROWS:
+        for _label, env_key in _ENV_FIELD_ROWS:
             val = self._env_entries[env_key].get().strip()
             lines.append(f"{env_key}={_format_env_line_value(val)}")
         extras = [
