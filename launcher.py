@@ -52,6 +52,7 @@ class HupuApp:
         self.root.configure(bg="#1a1a2e")
         self._running = False
         self._env_entries: dict[str, tk.Entry] = {}
+        self._reveal_secrets = tk.BooleanVar(value=False)
         self._build_ui()
         self.root.protocol("WM_DELETE_WINDOW", self._on_close)
 
@@ -109,6 +110,22 @@ class HupuApp:
             )
             ent.pack(side=tk.LEFT, fill=tk.X, expand=True)
             self._env_entries[env_key] = ent
+
+        reveal_row = tk.Frame(settings, bg="#16213e")
+        reveal_row.pack(fill=tk.X, padx=10, pady=(6, 2))
+        tk.Checkbutton(
+            reveal_row,
+            text="显示明文（核对账号与 Key；公共场合勿勾选）",
+            variable=self._reveal_secrets,
+            command=self._sync_entry_mask,
+            font=("Microsoft YaHei UI", 9),
+            fg="#aaaaaa",
+            bg="#16213e",
+            activebackground="#16213e",
+            activeforeground="#cccccc",
+            selectcolor="#0f3460",
+            cursor="hand2",
+        ).pack(anchor="w")
 
         settings_btn = tk.Frame(settings, bg="#16213e")
         settings_btn.pack(fill=tk.X, padx=10, pady=(10, 10))
@@ -174,6 +191,11 @@ class HupuApp:
     def _env_file_path(self) -> Path:
         return Path(resource_path(".env"))
 
+    def _sync_entry_mask(self):
+        show = "" if self._reveal_secrets.get() else "*"
+        for ent in self._env_entries.values():
+            ent.configure(show=show)
+
     def _load_env_into_fields(self):
         path = self._env_file_path()
         data = dotenv_values(path) if path.exists() else {}
@@ -182,6 +204,7 @@ class HupuApp:
             val = (raw or "").strip() if isinstance(raw, str) else (str(raw) if raw else "")
             self._env_entries[env_key].delete(0, tk.END)
             self._env_entries[env_key].insert(0, val)
+        self._sync_entry_mask()
 
     def _persist_env_to_disk(
         self,
