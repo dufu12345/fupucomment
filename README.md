@@ -4,6 +4,10 @@ English | [中文](README_CN.md)
 
 An automated reply bot for [Hupu BBS](https://bbs.hupu.us/) built with Python + Playwright. Features AI-powered reply generation, a one-click GUI, and Windows scheduled task support.
 
+### GUI preview
+
+![GUI launcher](docs/gui-screenshot.png)
+
 ---
 
 ## For non-developers: download and run
@@ -28,6 +32,8 @@ fupucomment/
 ├── .env.example            # Template for credentials (copy to .env and fill in)
 ├── .env                    # Secrets: Hupu credentials, AI API keys (not tracked by Git)
 ├── requirements.txt        # Python dependencies
+├── docs/
+│   └── gui-screenshot.png  # GUI screenshot for README
 │
 ├── actions/                # [Action Layer] Browser interactions
 │   ├── login.py            #   Login: detect status, open modal, fill credentials

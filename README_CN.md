@@ -4,6 +4,10 @@
 
 Python + Playwright 实现的hupu BBS 自动回帖工具，支持 AI 生成回复内容、GUI 一键运行、Windows 定时任务自动执行。
 
+### 界面预览
+
+![GUI 启动器界面](docs/gui-screenshot.png)
+
 ---
 
 ## 给非开发者：下载即用
@@ -28,6 +32,8 @@ fupucomment/
 ├── .env.example            # 凭据模板（复制为 .env 后填值）
 ├── .env                    # 敏感信息：hupu账号密码、AI API Key（不上传 Git）
 ├── requirements.txt        # Python 依赖列表
+├── docs/
+│   └── gui-screenshot.png  # GUI 界面截图（README 展示）
 │
 ├── actions/                # 【动作层】浏览器上的具体操作
 │   ├── login.py            #   登录：检测登录状态、打开登录弹窗、填账号密码
